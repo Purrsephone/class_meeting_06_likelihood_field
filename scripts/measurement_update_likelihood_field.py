@@ -23,6 +23,7 @@ def compute_prob_zero_centered_gaussian(dist, sd):
     return prob
 
 
+
 class Particle:
 
     def __init__(self, pose, w):
@@ -103,6 +104,8 @@ class LikelihoodFieldMeasurementUpdate(object):
             self.particle_cloud.append(new_particle)
 
         self.publish_particle_cloud()
+  
+
 
 
 
@@ -136,6 +139,42 @@ class LikelihoodFieldMeasurementUpdate(object):
         #       exercise. Compute the importance weights (w) for the 4 particles 
         #       in this environment using the likelihood field measurement
         #       algorithm. 
+        #q = 1
+        count = 1
+        for particle in self.particle_cloud:
+            print(count)
+            #q = 1
+            for direction in cardinal_directions_idxs:
+                q = 1 
+                quat_array = []
+                quat_array.append(particle.pose.orientation.x)
+                quat_array.append(particle.pose.orientation.y)
+                quat_array.append(particle.pose.orientation.z)
+                quat_array.append(particle.pose.orientation.w)
+                euler_points = euler_from_quaternion(quat_array)
+                theta = euler_points[2] 
+                ztk = data.ranges[direction]
+                if(data.ranges[direction] <= 3.5):
+                    xztk = particle.pose.orientation.x + (ztk * math.cos(theta + math.radians(direction)))
+                    yztk = particle.pose.orientation.y  + (ztk * math.sin(theta + math.radians(direction)))
+                    dist = LikelihoodField.get_closest_obstacle_distance(self.likelihood_field, xztk, yztk)
+                    print("direction:")
+                    print(direction)
+                    print("dist:")
+                    print(dist)
+                    q = q * compute_prob_zero_centered_gaussian(dist, 0.1)
+                    print("q:")
+                    print(q)
+                    print("\n")
+                else:
+                    print("too far")
+            count += 1
+            #print("q: " + str(q))
+            
+
+                
+    
+
 
     def run(self):
         r = rospy.Rate(1)
